@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Geolocation Weather WEB Sample</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-image: url(background.jpg);
+            background-repeat: no-repeat;
+            background-size: cover;
+        }
+        .conclusion {
+            margin: 38px;
+            color: rgba(19, 11, 101, 0.405);
+        }
+        .heading {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            color:#FFCC33;
+            text-shadow: 4px 4px 6px #664400;
+        }
+        .container {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1); 
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37); 
+            backdrop-filter: blur(10px); 
+            border: 1px solid rgba(255, 230, 39, 0.693); 
+            background-color: rgba(186, 245, 151, 0.415)
+        }
+        input[type="text"] {
+            background-color: black;
+            padding: 10px;
+            width: 300px;
+            color: white;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            background-color: #e6d300;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #000000;
+        }
+        #result {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <div class="heading"><h1>Your Weather, Your World – Stay Informed</h1></div>
+    <div class="container">
+        <h2>Know today’s forecast</h2>
+        <input type="text" id="cityInput" placeholder="Enter city name" />
+        <button onclick="getWeather()">See Forecast</button>
+        <button onclick="getWeatherByLocation()">See Current Location Forecast</button> 
+        <div id="result"></div>
+    </div>
+    <div class="conclusion"><h2>THANKS FOR VISITING</h2></div>
+
+    <script>
+        async function getWeather() {
+            const city = document.getElementById('cityInput').value;
+            const resultDiv = document.getElementById('result');
+
+            if (!city) {
+                resultDiv.innerHTML = '<p>Please enter a city name.</p>';
+                return;
+            }
+
+            try {
+                const apiKey = '9c2093a75b57269af1101a9674c424f8'; 
+                const response = await fetch(
+                    `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${apiKey}`
+                );
+
+                if (!response.ok) {
+                    throw new Error('City not found');
+                }
+
+                const data = await response.json();
+                displayWeatherData(data);
+            } catch (error) {
+                resultDiv.innerHTML = '<p>Unable to fetch weather data. Please try again.</p>';
+            }
+        }
+        async function getWeatherByLocation() {
+            const resultDiv = document.getElementById('result');
+
+            if (!navigator.geolocation) {
+                resultDiv.innerHTML = '<p>Geolocation is not supported by your browser.</p>';
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(async (position) => {
+                const { latitude, longitude } = position.coords;
+
+                try {
+                    const apiKey = '9c2093a75b57269af1101a9674c424f8'; 
+                    const response = await fetch(
+                        `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&units=metric&appid=${apiKey}`
+                    );
+
+                    if (!response.ok) {
+                        throw new Error('Unable to fetch location weather');
+                    }
+
+                    const data = await response.json();
+                    displayWeatherData(data);
+                } catch (error) {
+                    resultDiv.innerHTML = '<p>Unable to fetch weather data. Please try again.</p>';
+                }
+            }, () => {
+                resultDiv.innerHTML = '<p>Unable to retrieve your location. Please try again.</p>';
+            });
+        }
+        function displayWeatherData(data) {
+            const { name, main, weather, wind } = data;
+            const resultDiv = document.getElementById('result');
+            const temp = main.temp;
+            const description = weather[0].description;
+            const humidity = main.humidity;
+            const windDirection = wind.deg;
+            const windSpeed = wind.speed;
+
+            resultDiv.innerHTML = `
+                <p>The temperature in <strong>${name}</strong> is <strong>${temp}&deg;C</strong>.</p>
+                <p>Weather: <strong>${description}</strong></p>
+                <p>Humidity: <strong>${humidity}%</strong></p>
+                <p>Wind speed: <strong>${windSpeed} m/s</strong>, Direction: <strong>${windDirection}&deg;</strong></p>
+            `;
+        }
+    </script>
+</body>
+</html>
